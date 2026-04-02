@@ -4,7 +4,7 @@ import { RestaurantOwner } from '../models/RestaurantOwner.js';
 // POST /api/payouts/request
 export const requestPayout = async (req, res) => {
     try {
-        const { amount, orderCount } = req.body;
+        const { amount, orderCount, breakdown } = req.body;
         
         if (!amount || amount <= 0) {
             return res.status(400).json({ success: false, message: 'Invalid payout amount' });
@@ -18,6 +18,7 @@ export const requestPayout = async (req, res) => {
         const payout = await Payout.create({
             restaurantId: owner.restaurant,
             amount: amount,
+            breakdown: breakdown || { dishPrice: 0, taxes: 0 },
             orderCount: orderCount || 0,
             status: 'Pending'
         });

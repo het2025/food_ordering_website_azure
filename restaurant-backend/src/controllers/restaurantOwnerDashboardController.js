@@ -176,16 +176,33 @@ export const getPayoutStats = async (req, res) => {
 
     const totalPaid = payoutResult[0]?.totalPaid || 0;
     const paidOrders = payoutResult[0]?.paidOrders || 0;
-    const paidDishPrice = payoutResult[0]?.paidDishPrice || 0;
-    const paidTaxes = payoutResult[0]?.paidTaxes || 0;
+    let paidDishPrice = payoutResult[0]?.paidDishPrice || 0;
+    let paidTaxes = payoutResult[0]?.paidTaxes || 0;
+    
+    // Address legacy payouts where breakdown might not exist
+    const unallocatedPaid = totalPaid - (paidDishPrice + paidTaxes);
+    if (unallocatedPaid > 0 && stats.totalRevenue > 0) {
+      const dishRatio = stats.totalDishPrice / stats.totalRevenue;
+      const taxRatio = stats.totalTaxes / stats.totalRevenue;
+      paidDishPrice += unallocatedPaid * dishRatio;
+      paidTaxes += unallocatedPaid * taxRatio;
+    }
 
     console.log('💵 Total already paid:', totalPaid);
 
     // Pending payout = Total revenue - Total paid
-    const pendingPayout = stats.totalRevenue - totalPaid;
-    const pendingOrdersCount = stats.totalOrders - paidOrders;
-    const pendingDishPrice = stats.totalDishPrice - paidDishPrice;
-    const pendingTaxes = stats.totalTaxes - paidTaxes;
+    const pendingPayout = Math.max(0, stats.totalRevenue - totalPaid);
+    let pendingOrdersCount = stats.totalOrders - paidOrders;
+    let pendingDishPrice = stats.totalDishPrice - paidDishPrice;
+    let pendingTaxes = stats.totalTaxes - paidTaxes;
+
+    // If pendingPayout is 0, then we shouldn't have any pending dish price or taxes 
+    // This fixes issues with older payouts that did not include breakdown data
+    if (pendingPayout === 0) {
+      pendingDishPrice = 0;
+      pendingTaxes = 0;
+      pendingOrdersCount = 0;
+    }
 
     console.log('✅ Pending payout:', pendingPayout);
 
@@ -195,7 +212,7 @@ export const getPayoutStats = async (req, res) => {
         totalRevenue: stats.totalRevenue,
         totalPaid: totalPaid,
         orderCount: Math.max(0, pendingOrdersCount),
-        pendingPayout: Math.max(0, pendingPayout), // Ensure non-negative
+        pendingPayout: pendingPayout, // Ensure non-negative
         breakdown: {
           dishPrice: Math.max(0, pendingDishPrice),
           taxes: Math.max(0, pendingTaxes)

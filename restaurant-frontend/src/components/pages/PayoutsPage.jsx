@@ -114,7 +114,8 @@ const PayoutsPage = () => {
                 `${API_BASE_URL}/payouts/request`,
                 {
                     amount: stats.pendingPayout,
-                    orderCount: stats.orderCount
+                    orderCount: stats.orderCount,
+                    breakdown: stats.breakdown
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
