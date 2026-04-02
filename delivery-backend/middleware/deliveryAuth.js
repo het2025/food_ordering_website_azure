@@ -26,7 +26,9 @@ export const authDelivery = async (req, res, next) => {
 
     // No fallback — if JWT_SECRET is wrong or missing, this throws
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
+    const deliveryBoy = await DeliveryBoy.findById(decoded.id);
+
     if (!deliveryBoy) {
       return res.status(401).json({
         success: false,
