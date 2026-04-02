@@ -44,13 +44,13 @@ const Analysis = () => {
             ]);
 
             setData({
-                overview: overview.data.data,
-                orderStatus: orderStatus.data.data,
-                ordersTrend: ordersTrend.data.data,
-                paymentSplit: paymentSplit.data.data,
-                peakHours: peakHours.data.data,
-                topRestaurants: topRestaurants.data.data,
-                customerRetention: customerRetention.data.data
+                overview: overview.data.data ? JSON.parse(JSON.stringify(overview.data.data)) : null,
+                orderStatus: orderStatus.data.data ? JSON.parse(JSON.stringify(orderStatus.data.data)) : [],
+                ordersTrend: ordersTrend.data.data ? JSON.parse(JSON.stringify(ordersTrend.data.data)) : [],
+                paymentSplit: paymentSplit.data.data ? JSON.parse(JSON.stringify(paymentSplit.data.data)) : [],
+                peakHours: peakHours.data.data ? JSON.parse(JSON.stringify(peakHours.data.data)) : [],
+                topRestaurants: topRestaurants.data.data ? JSON.parse(JSON.stringify(topRestaurants.data.data)) : [],
+                customerRetention: customerRetention.data.data ? JSON.parse(JSON.stringify(customerRetention.data.data)) : null
             });
         } catch (error) {
             console.error('Error fetching analytics:', error);
