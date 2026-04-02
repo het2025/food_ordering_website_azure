@@ -198,12 +198,20 @@ function RestaurantOwnerOrdersPage() {
         if (profileRes.success && profileRes.data && profileRes.data.restaurantId) {
           const restaurantId = profileRes.data.restaurantId;
         if (!socket) {
-          if (!import.meta.env.VITE_SOCKET_URL) {
-            console.error('VITE_SOCKET_URL is not defined');
-            return;
+          // Attempt to connect using VITE_SOCKET_URL, fallback to derivation from VITE_API_BASE_URL, or hardcoded render URL
+          let socketUrl = import.meta.env.VITE_SOCKET_URL;
+          if (!socketUrl) {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+            if (apiBase.includes('http')) {
+              socketUrl = apiBase.replace('/api', '');
+            } else {
+              socketUrl = import.meta.env.MODE === 'production' 
+                ? 'https://restaurant-backend-1mkh.onrender.com'
+                : 'http://localhost:5004';
+            }
           }
 
-          socket = io(import.meta.env.VITE_SOCKET_URL, {
+          socket = io(socketUrl, {
             withCredentials: true,
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -224,6 +232,19 @@ function RestaurantOwnerOrdersPage() {
             console.log('🔔 New Order Received via Socket:', newOrder);
             showOrderNotification('🔔 New order just placed!');
             loadOrders(); // Refresh orders immediately
+          });
+
+          // Listen to status updates from other sources/devices
+          socket.on('order_status_updated', (update) => {
+            console.log('🔔 Order Status Updated via Socket:', update);
+            setOrders((prev) =>
+              prev.map((o) => {
+                if (o.backendId === update.orderId || o.id === update.originalOrderId) {
+                  return { ...o, status: update.status };
+                }
+                return o;
+              })
+            );
           });
           }
         }

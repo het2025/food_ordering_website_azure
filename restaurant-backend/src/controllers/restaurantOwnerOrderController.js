@@ -269,6 +269,16 @@ export const updateRestaurantOwnerOrderStatus = async (req, res) => {
       // Don't fail the request if sync fails - the local update succeeded
     }
 
+    // ✅ Broadcast update to other restaurant staff devices via Socket.IO
+    if (req.io) {
+      const roomName = `restaurant_${restaurantId}`;
+      req.io.to(roomName).emit('order_status_updated', {
+        orderId: updateResult.value ? updateResult.value._id : updateResult._id,
+        status: status,
+        originalOrderId: remoteOrderId
+      });
+    }
+
     return res.json({
       success: true,
       data: updateResult.value,
