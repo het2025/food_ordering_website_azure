@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Global Reset ───────────────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  /* iOS Safari: make 100vh refer to the visible area */
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f3f4f6;
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  overflow-x: hidden;
+  /* iOS Safari min-height fix */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* ─── Touch Interactions ─────────────────────────────────────────────── */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Prevent iOS auto-zoom on input focus (font-size must be >= 16px) */
+input, select, textarea {
+  touch-action: manipulation;
+  font-size: 16px;
+}
+
+/* ─── Viewport Height Fix (iOS Safari 100vh bug) ─────────────────────── */
+/* Use 100dvh (dynamic) when supported, falls back to 100vh */
+.min-h-screen-dvh {
+  min-height: 100vh; /* Fallback */
+  min-height: -webkit-fill-available; /* iOS Safari 12–14 */
+  min-height: 100svh; /* Static smallest viewport (Safari 15.4+) */
+}
+
+/* ─── Safe-area Bottom Padding (above BottomNav + device home indicator) */
+.pb-safe-nav {
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .pb-safe-nav {
+    padding-bottom: 2rem;
+  }
+}
+
+/* ─── Momentum Scrolling (iOS) ───────────────────────────────────────── */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* ─── PWA Prompt – sits above BottomNav on mobile, normal on desktop ─── */
+.pwa-prompt {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom) + 0.5rem);
+}
+@media (min-width: 768px) {
+  .pwa-prompt {
+    bottom: 1rem;
+  }
+}
+
+/* ─── Leaflet Map Container ──────────────────────────────────────────── */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 12px;
+}

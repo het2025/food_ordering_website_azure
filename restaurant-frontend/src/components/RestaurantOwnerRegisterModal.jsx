@@ -1,0 +1,691 @@
+import React, { useState } from 'react';
+import { X, CheckCircle, AlertCircle, Store, MapPin, Clock, IndianRupee, Image as ImageIcon, Check, Circle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { registerRestaurantOwner } from '../api/restaurantOwnerApi';
+
+function RestaurantOwnerRegisterModal({ isOpen, onClose }) {
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const [formData, setFormData] = useState({
+    // Owner Details
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+
+    // Restaurant Details
+    restaurantName: '',
+    description: '',
+    cuisine: '',
+
+    // Location Details
+    area: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+
+    // Additional Details
+    deliveryTime: '30',
+    priceRange: '₹₹',
+    image: '',
+    gstNumber: ''
+  });
+
+  // Password strength checks
+  const passwordChecks = {
+    hasUppercase: /[A-Z]/.test(formData.password),
+    hasNumeric: /[0-9]/.test(formData.password),
+    hasSpecial: /[@$!%*?&]/.test(formData.password),
+    hasMinLength: formData.password.length >= 8
+  };
+
+  const isPasswordStrong = Object.values(passwordChecks).every(check => check);
+  const passwordsMatch = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword;
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+
+    if (name === 'image' && files && files[0]) {
+      // Only allow single image
+      setFormData((prev) => ({ ...prev, image: files[0] }));
+    } else if (name === 'phone') {
+      // Only allow 10 digit numbers
+      const numericValue = value.replace(/\D/g, '');
+      if (numericValue.length <= 10) {
+        setFormData((prev) => ({ ...prev, [name]: numericValue }));
+      }
+    } else if (name === 'pincode') {
+      // Only allow 6 digit numbers
+      const numericValue = value.replace(/\D/g, '');
+      if (numericValue.length <= 6) {
+        setFormData((prev) => ({ ...prev, [name]: numericValue }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+
+    // Validation
+    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
+      setError('Please fill in all required fields (Name, Email, Phone, Password)');
+      return;
+    }
+
+    if (!formData.restaurantName) {
+      setError('Restaurant name is required');
+      return;
+    }
+
+    if (!formData.area || !formData.address || !formData.city || !formData.pincode) {
+      setError('Please fill in complete restaurant location details');
+      return;
+    }
+
+    // Phone validation - exactly 10 digits
+    if (formData.phone.length !== 10) {
+      setError('Phone number must be exactly 10 digits');
+      return;
+    }
+
+    // Pincode validation - exactly 6 digits
+    if (formData.pincode.length !== 6) {
+      setError('PIN code must be exactly 6 digits');
+      return;
+    }
+
+    // Password strength validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (formData.password.length > 32) {
+      setError('Password must not exceed 32 characters');
+      return;
+    }
+
+    if (!isPasswordStrong) {
+      setError('Password must contain at least one uppercase letter, one number, and one special character (@$!%*?&)');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // ✅ ENHANCED: Send complete restaurant data via FormData
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('email', formData.email);
+      data.append('phone', formData.phone);
+      data.append('password', formData.password);
+
+      // Construct restaurant object for JSON part
+      const restaurantData = {
+        name: formData.restaurantName,
+        description: formData.description || `Welcome to ${formData.restaurantName}`,
+        cuisine: formData.cuisine ? formData.cuisine.split(',').map(c => c.trim()) : ['Multi-Cuisine'],
+        location: {
+          area: formData.area,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state || 'Gujarat',
+          pincode: formData.pincode,
+          coordinates: [0, 0]
+        },
+        contact: {
+          phone: formData.phone,
+          email: formData.email
+        },
+        deliveryTime: formData.deliveryTime,
+        priceRange: formData.priceRange,
+        // If image is a File, don't put it in JSON (it becomes {}). Send empty string in JSON.
+        // The actual file is sent via formData.append('image', file) below.
+        image: formData.image instanceof File ? '' : (formData.image || ''),
+        gstNumber: formData.gstNumber || '',
+        status: 'active',
+        isActive: true
+      };
+
+      data.append('restaurant', JSON.stringify(restaurantData));
+
+      if (formData.image instanceof File) {
+        data.append('image', formData.image);
+      }
+
+      const response = await registerRestaurantOwner(data);
+
+      if (response.success) {
+        setSuccess(true);
+
+        if (response.token) {
+          localStorage.setItem('restaurantOwnerToken', response.token);
+          setTimeout(() => {
+            onClose();
+            navigate('/dashboard', { replace: true });
+          }, 2000);
+        } else {
+          // Approval needed case - keep modal open to show message
+          setTimeout(() => {
+            onClose();
+          }, 5000);
+        }
+      } else {
+        setError(response.message || 'Registration failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Restaurant owner registration error:', err);
+      setError(err.message || 'Registration failed. Please check your connection or try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="flex fixed inset-0 z-50 justify-center items-center p-4 backdrop-blur-sm bg-black/40">
+      <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full max-w-4xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 transition hover:text-gray-600"
+          disabled={isSubmitting}
+        >
+          <X size={22} />
+        </button>
+
+        <h2 className="mb-2 text-3xl font-bold text-center text-orange-600">
+          Register Your Restaurant 🍴
+        </h2>
+        <p className="mb-6 text-sm text-center text-gray-600">
+          Join QuickBite and start accepting orders today!
+        </p>
+
+        {/* Success Message */}
+        {success && (
+          <div className="flex gap-2 items-center p-4 mb-4 text-green-700 bg-green-50 rounded-lg border border-green-200">
+            <CheckCircle size={20} />
+            <span>Registration submitted successfully! Please wait for a few days for approval.</span>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="flex gap-2 items-center p-4 mb-4 text-red-700 bg-red-50 rounded-lg border border-red-200">
+            <AlertCircle size={20} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {isSubmitting ? (
+          <div className="py-12 text-center">
+            <div className="mx-auto mb-4 w-12 h-12 rounded-full border-4 border-orange-500 animate-spin border-t-transparent" />
+            <p className="text-lg font-medium text-gray-700">
+              Creating your account and restaurant profile...
+            </p>
+          </div>
+        ) : (
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Section 1: Owner Account Details */}
+            <div className="p-6 bg-orange-50 rounded-xl border border-orange-200">
+              <h3 className="flex gap-2 items-center mb-4 text-lg font-semibold text-gray-900">
+                <div className="flex justify-center items-center w-8 h-8 text-sm font-bold text-white bg-orange-600 rounded-full">
+                  1
+                </div>
+                Owner Account Details
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Your Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g., Ritesh Agrwal"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={32}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.name.length}/32 characters</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="your@email.com"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={100}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="9876543210"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={10}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.phone.length}/10 digits (numeric only)</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    GST Number (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="gstNumber"
+                    value={formData.gstNumber}
+                    onChange={handleChange}
+                    placeholder="e.g., 29ABCDE1234F1Z5"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    maxLength={15}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.gstNumber.length}/15 characters</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Create a strong password"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    minLength={8}
+                    maxLength={32}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.password.length}/32 characters</p>
+
+                  {/* Password strength indicators - Always visible when typing */}
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Password must contain:</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs">
+                        {passwordChecks.hasUppercase ? (
+                          <CheckCircle size={16} className="text-green-600 flex-shrink-0" fill="currentColor" />
+                        ) : (
+                          <Circle size={16} className="text-gray-400 flex-shrink-0" />
+                        )}
+                        <span className={passwordChecks.hasUppercase ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                          At least one uppercase letter (A-Z)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        {passwordChecks.hasNumeric ? (
+                          <CheckCircle size={16} className="text-green-600 flex-shrink-0" fill="currentColor" />
+                        ) : (
+                          <Circle size={16} className="text-gray-400 flex-shrink-0" />
+                        )}
+                        <span className={passwordChecks.hasNumeric ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                          At least one number (0-9)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        {passwordChecks.hasSpecial ? (
+                          <CheckCircle size={16} className="text-green-600 flex-shrink-0" fill="currentColor" />
+                        ) : (
+                          <Circle size={16} className="text-gray-400 flex-shrink-0" />
+                        )}
+                        <span className={passwordChecks.hasSpecial ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                          At least one special character (@$!%*?&)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        {passwordChecks.hasMinLength ? (
+                          <CheckCircle size={16} className="text-green-600 flex-shrink-0" fill="currentColor" />
+                        ) : (
+                          <Circle size={16} className="text-gray-400 flex-shrink-0" />
+                        )}
+                        <span className={passwordChecks.hasMinLength ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                          Minimum 8 characters
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter password"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    minLength={8}
+                    maxLength={32}
+                  />
+
+                  {/* Password match indicator - shows when user starts typing confirm password */}
+                  {formData.confirmPassword && (
+                    <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200">
+                      {passwordsMatch ? (
+                        <>
+                          <CheckCircle size={18} className="text-green-600 flex-shrink-0" fill="currentColor" />
+                          <span className="text-green-600 font-semibold text-sm">
+                            ✓ Passwords match!
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle size={18} className="text-red-600 flex-shrink-0" />
+                          <span className="text-red-600 font-medium text-sm">
+                            Passwords do not match
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Restaurant Details */}
+            <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
+              <h3 className="flex gap-2 items-center mb-4 text-lg font-semibold text-gray-900">
+                <div className="flex justify-center items-center w-8 h-8 text-sm font-bold text-white bg-blue-600 rounded-full">
+                  2
+                </div>
+                Restaurant Details
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="flex gap-2 items-center mb-1 text-sm font-medium text-gray-700">
+                    <Store size={16} />
+                    Restaurant Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="restaurantName"
+                    value={formData.restaurantName}
+                    onChange={handleChange}
+                    placeholder="e.g., Pizza Mountain"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={64}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.restaurantName.length}/64 characters</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Describe your restaurant and what makes it special..."
+                    rows="3"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    maxLength={100}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.description.length}/100 characters</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Cuisine Type
+                  </label>
+                  <input
+                    type="text"
+                    name="cuisine"
+                    value={formData.cuisine}
+                    onChange={handleChange}
+                    placeholder="e.g., Italian, Chinese, Indian"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    maxLength={32}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formData.cuisine.length}/32 characters · Separate multiple cuisines with commas
+                  </p>
+                </div>
+
+                <div>
+                  <label className="flex gap-2 items-center mb-1 text-sm font-medium text-gray-700">
+                    <ImageIcon size={16} />
+                    Restaurant Image (Select only 1 image)
+                  </label>
+                  <input
+                    type="file"
+                    name="image"
+                    onChange={handleChange}
+                    accept="image/*"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                  {formData.image && (
+                    <p className="mt-1 text-xs text-green-600">
+                      ✓ {formData.image.name || 'Image selected'}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="flex gap-2 items-center mb-1 text-sm font-medium text-gray-700">
+                    <Clock size={16} />
+                    Avg Delivery Time (mins)
+                  </label>
+                  <input
+                    type="number"
+                    name="deliveryTime"
+                    value={formData.deliveryTime}
+                    onChange={handleChange}
+                    placeholder="30"
+                    min="10"
+                    max="120"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex gap-2 items-center mb-1 text-sm font-medium text-gray-700">
+                    <IndianRupee size={16} />
+                    Price Range
+                  </label>
+                  <select
+                    name="priceRange"
+                    value={formData.priceRange}
+                    onChange={handleChange}
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    <option value="₹">₹ - Budget Friendly</option>
+                    <option value="₹₹">₹₹ - Moderate</option>
+                    <option value="₹₹₹">₹₹₹ - Premium</option>
+                    <option value="₹₹₹₹">₹₹₹₹ - Fine Dining</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Location Details */}
+            <div className="p-6 bg-green-50 rounded-xl border border-green-200">
+              <h3 className="flex gap-2 items-center mb-4 text-lg font-semibold text-gray-900">
+                <div className="flex justify-center items-center w-8 h-8 text-sm font-bold text-white bg-green-600 rounded-full">
+                  3
+                </div>
+                <MapPin size={20} />
+                Restaurant Location
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Area/Locality <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="area"
+                    value={formData.area}
+                    onChange={handleChange}
+                    placeholder="e.g., Alkapuri"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={32}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.area.length}/32 characters</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    placeholder="e.g., Vadodara"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={32}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.city.length}/32 characters</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Full Address <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Shop/Building No., Street name, Landmark"
+                    rows="2"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                    maxLength={100}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.address.length}/100 characters</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    placeholder="e.g., Gujarat"
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    maxLength={18}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.state.length}/18 characters</p>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    PIN Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handleChange}
+                    placeholder="e.g., 390007"
+                    maxLength={6}
+                    className="px-4 py-3 w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    required
+                  />
+                  <p className="mt-1 text-xs text-gray-500">{formData.pincode.length}/6 digits (numeric only)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms & Conditions */}
+            <div>
+              <label className="flex gap-2 items-start text-sm text-gray-600">
+                <input type="checkbox" className="mt-1" required />
+                <span>
+                  I agree to the{' '}
+                  <a href="#" className="text-orange-600 hover:underline">
+                    Terms & Conditions
+                  </a>{' '}
+                  and{' '}
+                  <a href="#" className="text-orange-600 hover:underline">
+                    Privacy Policy
+                  </a>
+                </span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting || success}
+              className="py-4 w-full text-lg font-bold text-white bg-gradient-to-r from-orange-500 to-red-600 rounded-xl shadow-lg transition hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Creating Account...' : 'Register Restaurant & Start Selling'}
+            </button>
+
+            {/* Login Link */}
+            <div className="text-sm text-center text-gray-600">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate('/login');
+                }}
+                className="font-medium text-orange-600 hover:underline"
+              >
+                Login here
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default RestaurantOwnerRegisterModal;

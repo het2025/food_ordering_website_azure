@@ -1,0 +1,47 @@
+import express from 'express';
+import {
+  createOrder,
+  getMyOrders,
+  getOrderById,
+  cancelOrder,
+  rateOrder,
+  updateOrderStatus,
+  validateCoupon,
+  getReadyOrders,
+  seedCoupons
+} from '../controllers/orderController.js';
+import { protect } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+// Internal route to get ready orders (for delivery polling)
+router.get('/internal/ready', getReadyOrders);
+
+// Update order status (Internal/Service route)
+router.put('/:id/update-status', updateOrderStatus);
+
+// All following routes require authentication
+router.use(protect);
+
+// Create new order
+router.post('/', createOrder);
+
+// Get my orders
+router.get('/my-orders', getMyOrders);
+
+// Get single order
+router.get('/:orderId', getOrderById);
+
+// Cancel order
+router.patch('/:orderId/cancel', cancelOrder);
+
+// Rate order
+router.post('/:orderId/rate', rateOrder);
+
+// Validate a coupon code
+router.post('/validate-coupon', validateCoupon);
+
+// Seed default coupons
+router.get('/seed-coupons', seedCoupons);
+
+export default router;
