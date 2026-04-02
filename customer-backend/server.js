@@ -28,18 +28,13 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for X-Forwarded-For header (Needed for rate limiter on Azure)
+app.set('trust proxy', 1);
+
 // Define allowed origins
-const allowedOrigins = process.env.NODE_ENV === 'development'
-  ? true  // Allow all origins in development (enables mobile access on local network)
-  : process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      process.env.FRONTEND_URL,
-      // Allow local network IP addresses
-      /^http:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}):(5173|5174|5175|3000)$/
-    ].filter(Boolean);
+const allowedOrigins = (origin, callback) => {
+  callback(null, true);
+};
 
 // Initialize Socket.io
 const io = new Server(server, {
@@ -107,7 +102,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);

@@ -22,32 +22,13 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// CORS Configuration — supports localhost + Azure Static Web Apps URLs
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.ADMIN_AZURE_URL,
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'http://localhost:3000'
-].filter(Boolean);
+// CORS Configuration
+const allowedOrigins = (origin, callback) => {
+  callback(null, true);
+};
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, server-to-server)
-    if (!origin) return callback(null, true);
-
-    // Allow local network IP addresses in development
-    const localNetworkPattern = /^http:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}):(5173|5174|5175|3000)$/;
-    if (localNetworkPattern.test(origin)) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

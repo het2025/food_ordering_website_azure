@@ -189,7 +189,6 @@ export const UserProvider = ({ children }) => {
     addresses,
     addAddress,
     updateAddress,
-    updateAddress,
     deleteAddress,
     toggleFavoriteDish,
     refreshUser: fetchUserProfile

@@ -1,3 +1,8 @@
 {
-  "vscode-edge-devtools.webhint": false
+  "vscode-edge-devtools.webhint": false,
+  "appService.zipIgnorePattern": [
+    "node_modules{,/**}",
+    ".vscode{,/**}"
+  ],
+  "appService.defaultWebAppToDeploy": "/subscriptions/c03f3106-3e9a-4d10-9720-5f636cdf956a/resourceGroups/food-delivery-rg/providers/Microsoft.Web/sites/food-delivery-backend"
 }
