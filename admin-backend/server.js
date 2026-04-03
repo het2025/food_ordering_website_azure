@@ -46,6 +46,9 @@ app.use(cors({
   maxAge: 86400
 }));
 
+// In Express 5.x, wildcard paths must use '(.*)' instead of '*'
+app.options('(.*)', cors());
+
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
