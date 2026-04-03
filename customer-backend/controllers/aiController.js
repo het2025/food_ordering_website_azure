@@ -271,7 +271,7 @@ export const chatWithAI = async (req, res) => {
 
                 if (activeOrders.length > 0) {
                     activeOrdersList = activeOrders.map(o =>
-                        `Order ID: ${o._id} | Restaurant: ${o.restaurantName} | Status: ${o.status} | Items: ${o.items.length} items`
+                        `Order ID: ${o._id} | Restaurant: ${o.restaurantName} | Status: ${o.status} | Tracking Action: [NAVIGATE:/track-order/${o._id}]`
                     ).join('\n');
                     orderContext = `USER HAS ACTIVE ORDERS:\n${activeOrdersList}`;
                 } else {
@@ -310,7 +310,7 @@ export const chatWithAI = async (req, res) => {
 
         RULES:
         1. **Live Order Tracking**:
-           - IF "USER HAS ACTIVE ORDERS": "Your order from [Restaurant] is [Status]." + [NAVIGATE:/track-order/ID]
+           - IF "USER HAS ACTIVE ORDERS": "Your order from [Restaurant] is [Status]." + the exact Tracking Action from the context.
            - IF "USER HAS NO ACTIVE ORDERS": "You don't have any active orders."
 
         2. **Ordering Specific Dishes (ADD TO CART)**:

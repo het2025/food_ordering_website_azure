@@ -414,7 +414,7 @@ export const completeDelivery = async (req, res) => {
       });
     }
 
-    if (order.deliveryOTP && order.deliveryOTP !== otp) {
+    if (!order.deliveryOTP || order.deliveryOTP.toString() !== otp.toString()) {
       return res.status(400).json({
         success: false,
         message: 'Invalid OTP. Please check with the customer.'
