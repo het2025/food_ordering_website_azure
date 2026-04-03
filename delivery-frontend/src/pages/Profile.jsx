@@ -166,7 +166,50 @@ const Profile = () => {
                   />
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                {/* Bank Details Input Section */}
+                <div className="pt-4 mt-2 border-t">
+                  <h3 className="mb-3 text-lg font-bold text-gray-800">Bank Account (For Payouts)</h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium text-gray-700">Account Name (As per Bank)</label>
+                      <input
+                        type="text"
+                        name="bankDetails.accountName"
+                        value={formData.bankDetails.accountName}
+                        onChange={handleChange}
+                        placeholder="Ex: John Doe"
+                        className="w-full px-4 py-3 text-base rounded-xl border border-gray-300 outline-none transition focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium text-gray-700">Account Number</label>
+                      <input
+                        type="text"
+                        name="bankDetails.accountNumber"
+                        value={formData.bankDetails.accountNumber}
+                        onChange={handleChange}
+                        placeholder="Ex: 50100XXXXXXXX"
+                        className="w-full px-4 py-3 text-base rounded-xl border border-gray-300 outline-none transition focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium text-gray-700">IFSC Code</label>
+                      <input
+                        type="text"
+                        name="bankDetails.ifscCode"
+                        value={formData.bankDetails.ifscCode}
+                        onChange={handleChange}
+                        placeholder="Ex: HDFC0001234"
+                        className="w-full px-4 py-3 text-base rounded-xl border border-gray-300 outline-none transition focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
                   <button
                     type="button"
                     onClick={() => setEditing(false)}
@@ -218,7 +261,35 @@ const Profile = () => {
                     <p className="mt-0.5 text-sm font-medium text-gray-900">{deliveryBoy?.drivingLicense}</p>
                   </div>
                 </div>
-
+                {/* Bank Details Display */}
+                <div className="mt-6 mb-4">
+                  <h3 className="mb-2 text-sm font-bold text-gray-800 uppercase tracking-wide">Bank Details</h3>
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    {deliveryBoy?.bankDetails?.accountNumber ? (
+                      <div className="space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                          <span className="text-xs text-gray-500 uppercase tracking-wide">Account Name</span>
+                          <span className="font-semibold text-gray-900">{deliveryBoy.bankDetails.accountName}</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                          <span className="text-xs text-gray-500 uppercase tracking-wide">Account No</span>
+                          <span className="font-bold text-gray-900 tracking-widest">
+                            •••• {String(deliveryBoy.bankDetails.accountNumber).slice(-4)}
+                          </span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                          <span className="text-xs text-gray-500 uppercase tracking-wide">IFSC</span>
+                          <span className="font-semibold text-gray-900 tracking-wider text-sm">{deliveryBoy.bankDetails.ifscCode}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-sm font-medium text-red-500">No bank account added.</p>
+                        <p className="text-xs text-gray-500 mt-1">Please edit your profile to add bank details for receiving payouts.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <button
                   onClick={() => setEditing(true)}
                   className="w-full mt-5 min-h-[48px] font-semibold text-white rounded-xl transition bg-primary hover:bg-opacity-90 active:scale-[0.98]"

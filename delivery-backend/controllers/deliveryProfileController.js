@@ -5,14 +5,15 @@ import { DeliveryBoy } from '../models/DeliveryBoy.js';
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { name, phone, vehicleType, vehicleNumber } = req.body;
+    const { name, phone, vehicleType, vehicleNumber, bankDetails } = req.body;
 
-    const deliveryBoy = await DeliveryBoy.findById(req.deliveryBoy._id);
+    const deliveryBoy = await DeliveryBoy.findById(req.deliveryBoy._id);      
 
     if (name) deliveryBoy.name = name;
     if (phone) deliveryBoy.phone = phone;
     if (vehicleType) deliveryBoy.vehicleType = vehicleType;
     if (vehicleNumber) deliveryBoy.vehicleNumber = vehicleNumber;
+    if (bankDetails) deliveryBoy.bankDetails = bankDetails;
 
     await deliveryBoy.save();
 
