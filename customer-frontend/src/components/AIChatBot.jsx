@@ -446,8 +446,11 @@ const AIChatBot = () => {
                                         <img
                                             src={dish.image}
                                             alt={dish.name}
-                                            className="w-full h-full object-cover"
-                                            onError={e => { e.target.style.display = 'none'; }}
+                                            className="object-cover w-full h-full"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://res.cloudinary.com/dovlhkyrr/image/upload/v1734341908/default_food_z9s1x8.jpg'; // Reliable food fallback image or similar
+                                            }}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-[#E85D04]/30 text-2xl">🍽️</div>
@@ -563,7 +566,7 @@ const AIChatBot = () => {
                 </div>
 
                 {/* Place Order Button */}
-                <div className="bg-white p-3">
+                <div className="p-3 bg-white">
                     {homeAddress ? (
                         <button
                             onClick={handleAutoOrder}
@@ -603,13 +606,13 @@ const AIChatBot = () => {
                         {/* Header */}
                         <div className="bg-gradient-to-r from-[#E85D04] to-[#F48C06] p-4 pt-5 pb-5 text-white flex justify-between items-center shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm border border-white/20">
+                                <div className="p-2 border bg-white/20 rounded-xl backdrop-blur-sm border-white/20">
                                     <Sparkles className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-extrabold text-lg leading-tight drop-shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>QuickBites AI</h3>
+                                    <h3 className="text-lg font-extrabold leading-tight drop-shadow-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>QuickBites AI</h3>
                                     <div className="flex items-center gap-1.5 opacity-90 mt-0.5">
-                                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></span>
+                                        <span className="w-2 h-2 bg-green-400 rounded-full shadow-sm animate-pulse"></span>
                                         <span className="text-xs font-medium tracking-wide uppercase">Online</span>
                                     </div>
                                 </div>
@@ -624,7 +627,7 @@ const AIChatBot = () => {
                                 )}
                                 <button
                                     onClick={handleClearChat}
-                                    className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                                    className="p-2 transition-colors rounded-full hover:bg-white/20"
                                     aria-label="Clear chat"
                                     title="Clear Chat"
                                 >
@@ -632,7 +635,7 @@ const AIChatBot = () => {
                                 </button>
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                                    className="p-2 transition-colors rounded-full hover:bg-white/20"
                                     aria-label="Close chat"
                                 >
                                     <X className="w-5 h-5 text-white" />
@@ -654,7 +657,7 @@ const AIChatBot = () => {
                                         {msg.sender === 'user'
                                             ? <User className="w-4 h-4 sm:w-5 sm:h-5" />
                                             : <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#E85D04] to-[#F48C06] rounded-full flex items-center justify-center shadow-md border-2 border-white">
-                                                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                                                <Sparkles className="w-4 h-4 text-white sm:w-5 sm:h-5" />
                                             </div>
                                         }
                                     </div>

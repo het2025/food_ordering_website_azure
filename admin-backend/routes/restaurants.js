@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getAllRestaurants,
   getPendingRestaurants,
+  getRestaurantById,
   approveRestaurant,
   rejectRestaurant,
   updateRestaurantStatus,
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.get('/', authAdmin, getAllRestaurants);
 router.get('/pending', authAdmin, getPendingRestaurants);
+router.get('/:id', authAdmin, validateObjectId('id'), getRestaurantById);
 router.post('/:id/approve', authAdmin, validateObjectId('id'), approveRestaurant);
 router.post('/:id/reject', authAdmin, validateObjectId('id'), rejectRestaurant);
 router.put('/:id/status', authAdmin, validateObjectId('id'), updateRestaurantStatus);

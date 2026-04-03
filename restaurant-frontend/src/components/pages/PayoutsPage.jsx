@@ -122,6 +122,7 @@ const PayoutsPage = () => {
 
             if (res.data.success) {
                 setPayoutAmount(stats.pendingPayout);
+                setStats(prev => ({ ...prev, pendingPayout: 0 }));
                 setShowPayoutModal(true);
                 // Refresh data
                 setTimeout(() => {

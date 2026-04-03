@@ -14,8 +14,14 @@ const RestaurantApprovals = () => {
 
     const socketUrl = import.meta.env.VITE_SOCKET_URL || `http://${window.location.hostname}:5004`;
     const socket = io(socketUrl, {
-      transports: ['websocket', 'polling'], // Better for Azure App Service
-      withCredentials: true
+      transports: ['websocket'], // Force websocket only to prevent polling spam
+      withCredentials: true,
+      reconnection: false // Disable constant reconnects to avoid console spam
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('Socket connection warning: Unable to connect to Restaurant Backend Socket (Auto-refresh disabled)');
+      socket.disconnect(); // explicit disconnect on error to stop console spam
     });
 
     socket.on('connect', () => {

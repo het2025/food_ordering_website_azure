@@ -65,17 +65,17 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen px-4 py-8 bg-gradient-to-br from-primary to-secondary">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
-        <div className="mb-5 sm:mb-8 text-center">
-          <div className="inline-block mb-3 sm:mb-4 bg-white rounded-full shadow-lg overflow-hidden w-20 h-20 sm:w-24 sm:h-24 p-2">
-            <img src="/quickbite_logo.svg" alt="QuickBite Logo" className="w-full h-full object-contain" />
+        <div className="mb-5 text-center sm:mb-8">
+          <div className="inline-block w-20 h-20 p-2 mb-3 overflow-hidden bg-white rounded-full shadow-lg sm:mb-4 sm:w-24 sm:h-24">
+            <img src="/quickbite_logo.svg" alt="QuickBite Logo" className="object-contain w-full h-full" />
           </div>
-          <h1 className="mb-2 text-3xl sm:text-4xl font-bold text-white">QuickBite</h1>
-          <p className="text-sm sm:text-base text-white text-opacity-90">Admin Panel</p>
+          <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">QuickBite</h1>
+          <p className="text-sm text-white sm:text-base text-opacity-90">Admin Panel</p>
         </div>
 
         {/* Login Form */}
-        <div className="p-5 sm:p-8 bg-white shadow-2xl rounded-2xl">
-          <h2 className="mb-4 sm:mb-6 text-xl sm:text-2xl font-bold text-gray-800">Sign In</h2>
+        <div className="p-5 bg-white shadow-2xl sm:p-8 rounded-2xl">
+          <h2 className="mb-4 text-xl font-bold text-gray-800 sm:mb-6 sm:text-2xl">Sign In</h2>
           
           {error && (
             <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 border border-red-400 rounded-lg">
@@ -93,7 +93,7 @@ const Login = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="admin@quickbite.com"
+                  placeholder="Enter email address"
                 className="w-full px-4 py-3 transition border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 required
                 maxLength={100}
@@ -139,7 +139,7 @@ const Login = () => {
         </div>
 
         <p className="mt-6 text-sm text-center text-white">
-          © 2024 QuickBite. All rights reserved.
+          © 2026 QuickBite. All rights reserved.
         </p>
       </div>
     </div>

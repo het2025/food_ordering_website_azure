@@ -4,11 +4,11 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart } from '@mui/x-charts/BarChart';
 
 const COLORS = ['#FF6B35', '#F7931E', '#FFAF61', '#FFD5A5', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
-const PopularDishesChart = ({ data = [] }) => {
+export default function PopularDishesChart({ data = [] }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isXs = useMediaQuery('(max-width:380px)');
@@ -25,9 +25,13 @@ const PopularDishesChart = ({ data = [] }) => {
     }
 
     const leftMargin = isXs ? 60 : isMobile ? 70 : 80;
-    const yAxisWidth = isXs ? 55 : isMobile ? 65 : 70;
     const maxLabelLen = isXs ? 8 : isMobile ? 10 : 12;
     const chartHeight = isMobile ? 240 : 300;
+
+    const names = data.map(d =>
+        d.name.length > maxLabelLen ? `${d.name.slice(0, maxLabelLen)}…` : d.name
+    );
+    const orderCounts = data.map(d => d.orderCount);
 
     return (
         <Paper sx={{ p: { xs: 2, sm: 3 }, height: '100%', borderRadius: 3 }}>
@@ -46,42 +50,29 @@ const PopularDishesChart = ({ data = [] }) => {
             >
                 Top selling items by order count
             </Typography>
-            <ResponsiveContainer width="100%" height={chartHeight}>
+            <Box sx={{ width: '100%', height: chartHeight }}>
                 <BarChart
-                    data={data}
-                    layout="vertical"
-                    margin={{ top: 5, right: isMobile ? 10 : 30, left: leftMargin, bottom: 5 }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                        type="number"
-                        tick={{ fontSize: isMobile ? 10 : 12 }}
-                    />
-                    <YAxis
-                        type="category"
-                        dataKey="name"
-                        tick={{ fontSize: isMobile ? 10 : 12 }}
-                        width={yAxisWidth}
-                        tickFormatter={(value) =>
-                            value.length > maxLabelLen ? `${value.slice(0, maxLabelLen)}…` : value
-                        }
-                    />
-                    <Tooltip
-                        formatter={(value, name) => [
-                            name === 'orderCount' ? `${value} orders` : `₹${value}`,
-                            name === 'orderCount' ? 'Orders' : 'Revenue',
-                        ]}
-                        contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-                    />
-                    <Bar dataKey="orderCount" radius={[0, 4, 4, 0]}>
-                        {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
+                    layout="horizontal"
+                    series={[{
+                        data: orderCounts,
+                        color: COLORS[0],
+                        valueFormatter: (value) => `${value} orders`,
+                        label: 'Orders'
+                    }]}
+                    yAxis={[{
+                        scaleType: 'band',
+                        data: names,
+                        tickLabelStyle: { fontSize: isMobile ? 10 : 12 },
+                    }]}
+                    xAxis={[{
+                        tickLabelStyle: { fontSize: isMobile ? 10 : 12 },
+                    }]}
+                    margin={{ left: leftMargin, right: isMobile ? 10 : 30, top: 5, bottom: 25 }}
+                    height={chartHeight}
+                    borderRadius={4}
+                    slotProps={{ legend: { hidden: true } }}
+                />
+            </Box>
         </Paper>
     );
-};
-
-export default PopularDishesChart;
+}

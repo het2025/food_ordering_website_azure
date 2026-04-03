@@ -1437,7 +1437,7 @@ export default function Homepage() {
             fontSize: '14px',
             opacity: 0.7
           }}>
-            © 2024 QuickBite. Crafted for excellence.
+            © 2026 QuickBite. Crafted for excellence.
           </p>
           <div style={{ display: 'flex', gap: '32px' }}>
             <a href="#" style={{

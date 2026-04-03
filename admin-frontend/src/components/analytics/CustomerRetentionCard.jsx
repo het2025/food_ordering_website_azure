@@ -4,9 +4,9 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart } from '@mui/x-charts/PieChart';
 
-const CustomerRetentionCard = ({ data }) => {
+export default function CustomerRetentionCard({ data }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -27,8 +27,8 @@ const CustomerRetentionCard = ({ data }) => {
     }
 
     const chartData = [
-        { name: 'New Customers', value: data.newCustomers, color: '#3B82F6' },
-        { name: 'Returning', value: data.returningCustomers, color: '#10B981' },
+        { id: 0, label: 'New Customers', value: data.newCustomers, color: '#3B82F6' },
+        { id: 1, label: 'Returning', value: data.returningCustomers, color: '#10B981' },
     ];
 
     const pieHeight = isMobile ? 150 : 180;
@@ -54,27 +54,22 @@ const CustomerRetentionCard = ({ data }) => {
             </Typography>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <ResponsiveContainer width="100%" height={pieHeight}>
-                    <PieChart>
-                        <Pie
-                            data={chartData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={innerR}
-                            outerRadius={outerR}
-                            dataKey="value"
-                            paddingAngle={5}
-                        >
-                            {chartData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                        </Pie>
-                        <Tooltip
-                            formatter={(value) => [`${value} customers`, '']}
-                            contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-                        />
-                    </PieChart>
-                </ResponsiveContainer>
+                <PieChart
+                    series={[
+                        {
+                            data: chartData,
+                            innerRadius: innerR,
+                            outerRadius: outerR,
+                            paddingAngle: 5,
+                            cornerRadius: 5,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -10, color: 'gray' },
+                        }
+                    ]}
+                    height={pieHeight}
+                    slotProps={{ legend: { hidden: true } }}
+                    margin={{ right: 5, left: 5, top: 5, bottom: 5 }}
+                />
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2 }}>
@@ -130,6 +125,4 @@ const CustomerRetentionCard = ({ data }) => {
             </Box>
         </Paper>
     );
-};
-
-export default CustomerRetentionCard;
+}
