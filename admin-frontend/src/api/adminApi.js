@@ -94,3 +94,7 @@ export const payoutsAPI = {
   updateStatus: (id, status) => adminAPI.put(`/payouts/requests/${id}/status`, { status })
 };
 
+export const deliveryPayoutsAPI = {
+  getAll: () => adminAPI.get('/delivery-payouts')
+};
+

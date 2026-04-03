@@ -13,6 +13,7 @@ import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
 import UserDetails from './pages/UserDetails';
 import AdminPayoutsPage from './pages/AdminPayoutsPage'; // ✅ NEW
+import DeliveryPayoutsPage from './pages/DeliveryPayoutsPage'; // ✅ NEW
 import PayoutRequestsPage from './pages/PayoutRequestsPage';
 import Analysis from './pages/Analysis'; // ✅ NEW: Analytics
 
@@ -40,6 +41,7 @@ function App() {
               <Route path="/restaurants" element={<Restaurants />} />
               <Route path="/restaurants/pending" element={<RestaurantApprovals />} />
               <Route path="/payouts/approvals" element={<AdminPayoutsPage />} /> {/* ✅ NEW */}
+              <Route path="/delivery-payouts" element={<DeliveryPayoutsPage />} /> {/* ✅ NEW */}
               <Route path="/analytics" element={<Analysis />} /> {/* ✅ NEW */}
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetails />} />
