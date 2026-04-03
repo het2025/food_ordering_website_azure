@@ -179,95 +179,89 @@ export const updateRestaurantOwnerOrderStatus = async (req, res) => {
     // Retrieve the updated order to get originalOrderId
     const remoteOrderId = updatedOrder.originalOrderId;
 
-    // ✅ NEW: Trigger Delivery Order Creation if status is 'Ready'
+    // ✅ FIX: Fire Delivery Order Creation asynchronously to avoid blocking the UI response
     if (status === 'Ready') {
-      try {
-        console.log('🚀 Status is Ready - Initiating Delivery Order Creation...');
-
-        // 1. Get Restaurant Details for Location
-        const restaurantDetails = await Restaurant.findById(restaurantId);
-
+      console.log('🚀 Status is Ready - Initiating Delivery Order Creation (background)...');
+      
+      const DELIVERY_BACKEND_URL = process.env.DELIVERY_BACKEND_URL || 'https://delivery-backend-zot7.onrender.com';
+      
+      Restaurant.findById(restaurantId).then(async (restaurantDetails) => {
         if (!restaurantDetails) {
           console.error('❌ Critical: Restaurant details not found for delivery creation');
-        } else {
-          const DELIVERY_BACKEND_URL = process.env.DELIVERY_BACKEND_URL || 'https://delivery-backend-zot7.onrender.com';
+          return;
+        }
 
-          // ✅ FIX: Validate all required fields before sending to delivery-backend
-          const customerId = updatedOrder.userId || updatedOrder.customer || null;
-          const deliveryAddr = updatedOrder.deliveryAddress || { address: 'Not provided' };
-          const orderNum = updatedOrder.orderNumber || `ORD-${updatedOrder._id.toString().slice(-8)}`;
+        const customerId = updatedOrder.userId || updatedOrder.customer || null;
+        const deliveryAddr = updatedOrder.deliveryAddress || { address: 'Not provided' };
+        const orderNum = updatedOrder.orderNumber || `ORD-${updatedOrder._id.toString().slice(-8)}`;
 
-          if (!customerId) {
-            console.warn('⚠️ Skipping delivery creation: No customer ID found on order');
+        if (!customerId) {
+          console.warn('⚠️ Skipping delivery creation: No customer ID found on order');
+          return;
+        }
+
+        const deliveryPayload = {
+          orderId: updatedOrder.originalOrderId || updatedOrder._id.toString(),
+          orderNumber: orderNum,
+          restaurant: restaurantId.toString(),
+          restaurantName: restaurantDetails.name || 'Restaurant',
+          restaurantLocation: restaurantDetails.location || { address: restaurantDetails.address || '' },
+          customer: customerId.toString(),
+          customerName: updatedOrder.customerName || 'Customer',
+          customerPhone: updatedOrder.customerPhone || '',
+          deliveryAddress: deliveryAddr,
+          orderAmount: updatedOrder.totalAmount || updatedOrder.total || 0,
+          deliveryFee: updatedOrder.deliveryFee || 0,
+          distance: updatedOrder.deliveryDistance || 0,
+          estimatedDeliveryTime: 30
+        };
+
+        console.log('📦 Sending payload to Delivery Backend:', JSON.stringify(deliveryPayload, null, 2));
+
+        try {
+          const deliveryResponse = await axios.post(
+            `${DELIVERY_BACKEND_URL}/api/delivery/orders/create`,
+            deliveryPayload,
+            { timeout: 30000 }
+          );
+          if (deliveryResponse.data.success) {
+            console.log('✅✅✅ Delivery Order Created Successfully!');
           } else {
-            // 2. Construct Payload with safe fallbacks
-            const deliveryPayload = {
-              orderId: updatedOrder.originalOrderId || updatedOrder._id.toString(),
-              orderNumber: orderNum,
-              restaurant: restaurantId.toString(),
-              restaurantName: restaurantDetails.name || 'Restaurant',
-              restaurantLocation: restaurantDetails.location || { address: restaurantDetails.address || '' },
-              customer: customerId.toString(),
-              customerName: updatedOrder.customerName || 'Customer',
-              customerPhone: updatedOrder.customerPhone || '',
-              deliveryAddress: deliveryAddr,
-              orderAmount: updatedOrder.totalAmount || updatedOrder.total || 0,
-              deliveryFee: updatedOrder.deliveryFee || 0,
-              distance: updatedOrder.deliveryDistance || 0,
-              estimatedDeliveryTime: 30
-            };
-
-            console.log('📦 Sending payload to Delivery Backend:', JSON.stringify(deliveryPayload, null, 2));
-
-            // 3. Call Delivery Backend
-            const deliveryResponse = await axios.post(
-              `${DELIVERY_BACKEND_URL}/api/delivery/orders/create`,
-              deliveryPayload,
-              { timeout: 30000 }
-            );
-
-            if (deliveryResponse.data.success) {
-              console.log('✅✅✅ Delivery Order Created Successfully!');
-            } else {
-              console.warn('⚠️ Delivery Backend returned success: false', deliveryResponse.data);
-            }
+            console.warn('⚠️ Delivery Backend returned success: false', deliveryResponse.data);
           }
+        } catch (deliveryError) {
+          console.error('❌ Failed to create delivery order:', deliveryError.message);
         }
-      } catch (deliveryError) {
-        console.error('❌ Failed to create delivery order:', deliveryError.message);
-        if (deliveryError.response) {
-          console.error('   Response data:', deliveryError.response.data);
-        }
-      }
+      }).catch(err => console.error('Error fetching restaurant details for delivery', err));
     }
 
     if (!remoteOrderId) {
       console.log('ℹ️ No originalOrderId — will use local order ID for customer-backend sync.');
     }
 
-    // ✅ Sync status update to customer-backend
-    // This is crucial for 'Ready' status to trigger delivery notification!
-    try {
+    // ✅ FIX: Fire Customer Backend Sync asynchronously so UI isn't blocked
+    (() => {
       const CUSTOMER_BACKEND_URL = process.env.CUSTOMER_BACKEND_URL || 'https://customer-backend-ibwg.onrender.com';
       const targetId = remoteOrderId || id;
 
       console.log(`📡 Syncing status '${status}' to customer-backend for order ${targetId}...`);
 
-      const syncResponse = await axios.put(
+      axios.put(
         `${CUSTOMER_BACKEND_URL}/api/orders/${targetId}/update-status`,
         { status: status },
         { timeout: 30000 }
-      );
-
-      if (syncResponse.data.success) {
-        console.log('✅ Status synced to customer-backend - delivery notification should be triggered!');
-      } else {
-        console.warn('⚠️ Customer-backend sync returned success: false');
-      }
-    } catch (syncError) {
-      console.error('⚠️ Failed to sync status to customer-backend:', syncError.message);
-      // Don't fail the request if sync fails - the local update succeeded
-    }
+      )
+      .then(syncResponse => {
+        if (syncResponse.data.success) {
+          console.log('✅ Status synced to customer-backend - delivery notification should be triggered!');
+        } else {
+          console.warn('⚠️ Customer-backend sync returned success: false');
+        }
+      })
+      .catch(syncError => {
+        console.error('⚠️ Failed to sync status to customer-backend:', syncError.message);
+      });
+    })();
 
     // ✅ Broadcast update to other restaurant staff devices via Socket.IO
     if (req.io) {

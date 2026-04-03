@@ -310,8 +310,8 @@ export const chatWithAI = async (req, res) => {
 
         RULES:
         1. **Live Order Tracking**:
-           - IF "USER HAS ACTIVE ORDERS": "Your order from [Restaurant] is [Status]." + the exact Tracking Action from the context.
-           - IF "USER HAS NO ACTIVE ORDERS": "You don't have any active orders."
+           - IF "USER HAS ACTIVE ORDERS": "Your order from [Restaurant] is [Status]." + the EXACT "Tracking Action" string from the USER CONTEXT (e.g., [NAVIGATE:/track-order/YOUR_ID_HERE]). Do not modify the Tracking Action in any way.
+           - IF "USER HAS NO ACTIVE ORDERS": "You don't have any active orders to track." + [NAVIGATE:/orders]
 
         2. **Ordering Specific Dishes (ADD TO CART)**:
            - **STRICT RULE**: You can ONLY generate an [ADD_TO_CART] tag if the item is in "MATCHING DISHES".
