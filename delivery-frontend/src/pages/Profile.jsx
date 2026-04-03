@@ -19,14 +19,43 @@ const Profile = () => {
     name: deliveryBoy?.name || '',
     phone: deliveryBoy?.phone || '',
     vehicleType: deliveryBoy?.vehicleType || 'bike',
-    vehicleNumber: deliveryBoy?.vehicleNumber || ''
+    vehicleNumber: deliveryBoy?.vehicleNumber || '',
+    bankDetails: {
+      accountNumber: deliveryBoy?.bankDetails?.accountNumber || '',
+      accountName: deliveryBoy?.bankDetails?.accountName || '',
+      ifscCode: deliveryBoy?.bankDetails?.ifscCode || ''
+    }
   });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    let { name, value } = e.target;
+    
+    if (name.startsWith('bankDetails.')) {
+      const field = name.split('.')[1];
+      
+      // Strict Validations
+      if (field === 'accountNumber') {
+        value = value.replace(/\D/g, '').slice(0, 18);
+      } else if (field === 'accountName') {
+        value = value.replace(/[^A-Za-z\s]/g, '').toUpperCase();
+      } else if (field === 'ifscCode') {
+        value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 11);
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        bankDetails: {
+          ...prev.bankDetails,
+          [field]: value
+        }
+      }));
+      return;
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
   };
 

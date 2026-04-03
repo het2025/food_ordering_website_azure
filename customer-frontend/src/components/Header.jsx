@@ -19,7 +19,9 @@ import {
   Settings,
   Home,
   Store,
-  MapPin
+  MapPin,
+  Briefcase,
+  Truck
 } from 'lucide-react'
 import { useUser } from '../context/UserContext'
 

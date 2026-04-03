@@ -334,29 +334,35 @@ export default function Homepage() {
               { id: 'explore', label: 'Explore', ref: heroRef },
               { id: 'restaurants', label: 'Restaurants', ref: restaurantsRef },
               { id: 'offers', label: 'Offers', ref: offersRef },
-              { id: 'app', label: 'App', ref: appRef }
-            ].map((item) => (
-              <a
-                key={item.id}
-                ref={(el) => (navRefs.current[item.id] = el)}
-                href={`#${item.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection(item.ref);
-                }}
-                style={{
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: activeSection === item.id ? accentAmber : textMutedOnMain,
-                  textDecoration: 'none',
-                  transition: 'color 0.3s',
-                  cursor: 'pointer',
-                  paddingBottom: '4px'
-                }}
-              >
-                {item.label}
-              </a>
+                { id: 'app', label: 'App', ref: appRef },
+                { id: 'partner', label: 'Partner with us', url: 'https://witty-wave-09eabc200.6.azurestaticapps.net' },
+                { id: 'delivery', label: 'Join as Delivery Partner', url: 'https://icy-moss-03c4d1000.6.azurestaticapps.net' }
+              ].map((item) => (
+                <a
+                  key={item.id}
+                  ref={(el) => (navRefs.current[item.id] = el)}
+                  href={item.url ? item.url : `#${item.id}`}
+                  target={item.url ? "_blank" : undefined}
+                  rel={item.url ? "noopener noreferrer" : undefined}
+                  onClick={(e) => {
+                    if (!item.url) {
+                      e.preventDefault();
+                      scrollToSection(item.ref);
+                    }
+                  }}
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: activeSection === item.id ? accentAmber : textMutedOnMain,
+                    textDecoration: 'none',
+                    transition: 'color 0.3s',
+                    cursor: 'pointer',
+                    paddingBottom: '4px'
+                  }}
+                >
+                  {item.label}
+                </a>
             ))}
           </div>
 
@@ -452,11 +458,20 @@ export default function Homepage() {
               { id: 'explore', label: 'Explore', ref: heroRef },
               { id: 'restaurants', label: 'Restaurants', ref: restaurantsRef },
               { id: 'offers', label: 'Offers', ref: offersRef },
-              { id: 'app', label: 'App', ref: appRef }
+              { id: 'app', label: 'App', ref: appRef },
+              { id: 'partner', label: 'Partner with us', url: 'https://witty-wave-09eabc200.6.azurestaticapps.net' },
+              { id: 'delivery', label: 'Join as Delivery Partner', url: 'https://icy-moss-03c4d1000.6.azurestaticapps.net' }
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => { setIsMobileNavOpen(false); scrollToSection(item.ref); }}
+                onClick={() => {
+                  setIsMobileNavOpen(false);
+                  if (item.url) {
+                    window.open(item.url, '_blank', 'noopener,noreferrer');
+                  } else {
+                    scrollToSection(item.ref);
+                  }
+                }}
                 style={{
                   background: 'none',
                   border: 'none',

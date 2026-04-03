@@ -92,6 +92,11 @@ const deliveryBoySchema = new mongoose.Schema({
     licensePhoto: String,
     vehiclePhoto: String,
     aadharCard: String
+  },
+  bankDetails: {
+    accountNumber: { type: String, trim: true },
+    accountName: { type: String, trim: true },
+    ifscCode: { type: String, trim: true }
   }
 }, {
   timestamps: true
