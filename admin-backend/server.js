@@ -29,22 +29,15 @@ const allowedOrigins = (origin, callback) => {
 };
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],      
   exposedHeaders: ['Content-Length', 'X-JSON'],
   maxAge: 86400
 }));
 
-// REMOVE THIS LINE - It's causing the error:
-// app.options('*', cors());  ❌ DELETE THIS LINE
-
-// Body parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Request logging middleware
+app.options('*', cors());
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
