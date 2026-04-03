@@ -48,6 +48,10 @@ export const usersAPI = {
   delete: (id) => adminAPI.delete(`/users/${id}`)
 };
 
+export const deliveryUsersAPI = {
+  getAll: () => adminAPI.get('/delivery-users'),
+};
+
 export const restaurantsAPI = {
   getAll: (page = 1, limit = 20, search = '', status = '') =>
     adminAPI.get(`/restaurants?page=${page}&limit=${limit}&search=${search}&status=${status}`),

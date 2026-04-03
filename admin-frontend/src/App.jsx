@@ -6,6 +6,7 @@ import { AdminProvider } from './context/AdminContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import DeliveryUsers from './pages/DeliveryUsers';
 import Restaurants from './pages/Restaurants';
 import RestaurantApprovals from './pages/RestaurantApprovals';
 import Orders from './pages/Orders';
@@ -34,6 +35,7 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/users" element={<Users />} />
+              <Route path="/delivery-users" element={<DeliveryUsers />} />
               <Route path="/users/:id" element={<UserDetails />} />
               <Route path="/restaurants" element={<Restaurants />} />
               <Route path="/restaurants/pending" element={<RestaurantApprovals />} />

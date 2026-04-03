@@ -12,6 +12,7 @@ import restaurantRoutes from './routes/restaurants.js';
 import orderRoutes from './routes/orders.js';
 import payoutRoutes from './routes/adminPayoutRoutes.js';
 import analyticsRoutes from './routes/adminAnalyticsRoutes.js';
+import deliveryUsersRoutes from './routes/deliveryUsers.js';
 
 // Load environment variables
 dotenv.config();
@@ -62,6 +63,7 @@ app.get('/health', (req, res) => {
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin/dashboard', dashboardRoutes);
 app.use('/api/admin/users', userRoutes);
+app.use('/api/admin/delivery-users', deliveryUsersRoutes);
 app.use('/api/admin/restaurants', restaurantRoutes);
 app.use('/api/admin/orders', orderRoutes);
 app.use('/api/admin/payouts', payoutRoutes); // ✅ NEW: Payout routes
