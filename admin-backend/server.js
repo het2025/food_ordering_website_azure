@@ -24,15 +24,24 @@ const app = express();
 connectDB();
 
 // CORS Configuration
-const allowedOrigins = (origin, callback) => {
-  callback(null, true);
-};
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://gray-mud-0b9e65000.6.azurestaticapps.net' // Add your frontend domain explicitly
+];
 
 app.use(cors({
-  origin: true,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Give access to any origin for now to prevent blocking on production
+    // You can restrict this later if needed.
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],      
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   exposedHeaders: ['Content-Length', 'X-JSON'],
   maxAge: 86400
 }));
